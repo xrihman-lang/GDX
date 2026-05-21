@@ -1,0 +1,129 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    
+    function isValidId(id) { 
+        return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    function isValidCompanySettings(data) {
+      return data.keys().hasAll(['companyName', 'updatedAt']) 
+             && data.companyName is string && data.companyName.size() <= 100
+             && (!('companyAddress' in data) || (data.companyAddress is string && data.companyAddress.size() <= 500))
+             && (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() <= 20))
+             && (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 2048))
+             && data.updatedAt is string;
+    }
+    
+    function isValidEmployee(data) {
+      return data.keys().hasAll(['fullName', 'mobileNumber', 'salaryType', 'salaryAmount', 'createdAt', 'updatedAt'])
+             && data.fullName is string && data.fullName.size() <= 100
+             && data.mobileNumber is string && data.mobileNumber.size() <= 20
+             && (!('employeeId' in data) || (data.employeeId is string && data.employeeId.size() <= 50))
+             && data.salaryType in ['Monthly', 'Daily']
+             && data.salaryAmount is number
+             && (!('overtimeRate' in data) || (data.overtimeRate is number))
+             && (!('joiningDate' in data) || data.joiningDate is string)
+             && (!('department' in data) || data.department is string)
+             && (!('position' in data) || data.position is string)
+             && (!('photoUrl' in data) || data.photoUrl is string)
+             && (!('notes' in data) || data.notes is string)
+             && (!('isActive' in data) || data.isActive is bool)
+             && data.createdAt is string 
+             && data.updatedAt is string;
+    }
+
+    function isValidAttendance(data) {
+       return data.keys().hasAll(['employeeId', 'date', 'status', 'month', 'year', 'timestamp'])
+              && data.employeeId is string && data.employeeId.size() <= 128
+              && data.date is string && data.date.size() <= 20
+              && data.status in ['Present', 'Absent', 'Leave', 'Half Day', 'Holiday', 'Overtime']
+              && data.month is number && data.year is number && data.timestamp is number;
+    }
+    
+    function isValidAdvance(data) {
+       return data.keys().hasAll(['employeeId', 'date', 'amount', 'month', 'year', 'timestamp'])
+              && data.employeeId is string && data.employeeId.size() <= 128
+              && data.date is string && data.date.size() <= 20
+              && data.amount is number
+              && data.month is number && data.year is number && data.timestamp is number;
+    }
+    
+    function isValidOvertime(data) {
+       return data.keys().hasAll(['employeeId', 'date', 'hours', 'amount', 'month', 'year', 'timestamp'])
+              && data.employeeId is string && data.employeeId.size() <= 128
+              && data.date is string && data.date.size() <= 20
+              && data.hours is number
+              && data.amount is number
+              && data.month is number && data.year is number && data.timestamp is number;
+    }
+    
+    function isValidSalarySlip(data) {
+       return data.keys().hasAll(['employeeId', 'month', 'year', 'workingDays', 'absentDays', 'leaveDays', 'halfDays', 'overtimeAmount', 'advanceDeduction', 'netSalary', 'generatedAt'])
+              && data.employeeId is string && data.employeeId.size() <= 128
+              && data.month is number && data.year is number
+              && data.workingDays is number && data.absentDays is number
+              && data.leaveDays is number && data.halfDays is number
+              && data.overtimeAmount is number && data.advanceDeduction is number
+              && data.netSalary is number
+              && data.generatedAt is string;
+    }
+
+    match /users/{userId} {
+      match /company/settings {
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId) && isValidCompanySettings(incoming());
+      }
+      
+      match /employees/{employeeId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidEmployee(incoming()) && isValidId(employeeId);
+        allow update: if isOwner(userId) 
+                      && isValidEmployee(incoming()) 
+                      && incoming().createdAt == existing().createdAt; // createdAt immutable
+        allow delete: if isOwner(userId);
+      }
+      
+      match /attendance/{attendanceId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidAttendance(incoming()) && isValidId(attendanceId)
+                      && exists(/databases/$(database)/documents/users/$(userId)/employees/$(incoming().employeeId));
+        allow update: if isOwner(userId) && isValidAttendance(incoming());
+        allow delete: if isOwner(userId);
+      }
+      
+      match /advances/{advanceId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidAdvance(incoming()) && isValidId(advanceId)
+                      && exists(/databases/$(database)/documents/users/$(userId)/employees/$(incoming().employeeId));
+        allow update: if isOwner(userId) && isValidAdvance(incoming());
+        allow delete: if isOwner(userId);
+      }
+      
+      match /overtime/{overtimeId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidOvertime(incoming()) && isValidId(overtimeId)
+                      && exists(/databases/$(database)/documents/users/$(userId)/employees/$(incoming().employeeId));
+        allow update: if isOwner(userId) && isValidOvertime(incoming());
+        allow delete: if isOwner(userId);
+      }
+      
+      match /salary_slips/{slipId} {
+         allow read: if isOwner(userId);
+         allow create: if isOwner(userId) && isValidSalarySlip(incoming()) && isValidId(slipId)
+                       && exists(/databases/$(database)/documents/users/$(userId)/employees/$(incoming().employeeId));
+         allow update: if isOwner(userId) && isValidSalarySlip(incoming());
+         allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

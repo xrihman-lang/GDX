@@ -1,0 +1,127 @@
+{
+  "entities": {
+    "CompanySettings": {
+      "title": "Company Settings",
+      "description": "Company configuration and rules",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "companyAddress": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["companyName", "updatedAt"]
+    },
+    "Employee": {
+      "title": "Employee",
+      "description": "Employee profile details",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string" },
+        "mobileNumber": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "salaryType": { "type": "string", "enum": ["Monthly", "Daily"] },
+        "salaryAmount": { "type": "number" },
+        "overtimeRate": { "type": "number" },
+        "joiningDate": { "type": "string" },
+        "department": { "type": "string" },
+        "position": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "notes": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["fullName", "mobileNumber", "salaryType", "salaryAmount", "createdAt", "updatedAt"]
+    },
+    "Attendance": {
+      "title": "Attendance Record",
+      "description": "Daily attendance for an employee",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string", "enum": ["Present", "Absent", "Leave", "Half Day", "Holiday", "Overtime"] },
+        "month": { "type": "number" },
+        "year": { "type": "number" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["employeeId", "date", "status", "month", "year", "timestamp"]
+    },
+    "Advance": {
+      "title": "Advance Record",
+      "description": "Advance payment given to an employee",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string" },
+        "date": { "type": "string" },
+        "amount": { "type": "number" },
+        "month": { "type": "number" },
+        "year": { "type": "number" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["employeeId", "date", "amount", "month", "year", "timestamp"]
+    },
+    "Overtime": {
+      "title": "Overtime Record",
+      "description": "Overtime hours for an employee",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string" },
+        "date": { "type": "string" },
+        "hours": { "type": "number" },
+        "amount": { "type": "number" },
+        "month": { "type": "number" },
+        "year": { "type": "number" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["employeeId", "date", "hours", "amount", "month", "year", "timestamp"]
+    },
+    "SalarySlip": {
+      "title": "Salary Slip",
+      "description": "Generated monthly salary history",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string" },
+        "month": { "type": "number" },
+        "year": { "type": "number" },
+        "workingDays": { "type": "number" },
+        "absentDays": { "type": "number" },
+        "leaveDays": { "type": "number" },
+        "halfDays": { "type": "number" },
+        "overtimeAmount": { "type": "number" },
+        "advanceDeduction": { "type": "number" },
+        "netSalary": { "type": "number" },
+        "generatedAt": { "type": "string" }
+      },
+      "required": ["employeeId", "month", "year", "workingDays", "absentDays", "leaveDays", "halfDays", "overtimeAmount", "advanceDeduction", "netSalary", "generatedAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}/company/settings": {
+      "schema": { "$ref": "#/entities/CompanySettings" },
+      "description": "Stores company settings"
+    },
+    "users/{userId}/employees/{employeeId}": {
+      "schema": { "$ref": "#/entities/Employee" },
+      "description": "Stores employee profiles"
+    },
+    "users/{userId}/attendance/{attendanceId}": {
+      "schema": { "$ref": "#/entities/Attendance" },
+      "description": "Stores attendance records"
+    },
+    "users/{userId}/advances/{advanceId}": {
+      "schema": { "$ref": "#/entities/Advance" },
+      "description": "Stores advance payments"
+    },
+    "users/{userId}/overtime/{overtimeId}": {
+      "schema": { "$ref": "#/entities/Overtime" },
+      "description": "Stores overtime records"
+    },
+    "users/{userId}/salary_slips/{slipId}": {
+      "schema": { "$ref": "#/entities/SalarySlip" },
+      "description": "Stores generated salary slips"
+    }
+  }
+}
