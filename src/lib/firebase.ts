@@ -2,10 +2,19 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import firebaseConfig from '../../firebase-applet-config.json';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBywt7y3nUR3ZFvQo-iATFEwwvtFp9HPYk",
+  authDomain: "gdx00-25d5e.firebaseapp.com",
+  projectId: "gdx00-25d5e",
+  storageBucket: "gdx00-25d5e.firebasestorage.app",
+  messagingSenderId: "776287894702",
+  appId: "1:776287894702:web:b19e9386fb30b2b696413f",
+  measurementId: "G-KDFL3Z4PF3"
+};
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId); // CRITICAL
+export const db = getFirestore(app); 
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 
